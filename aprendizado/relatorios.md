@@ -1,0 +1,4 @@
+# Aprendizado — relatórios (Jasper)
+
+- `.jrxml` alterado sem o `.jasper` do mesmo nome no diff: a tela continua gerando o relatório antigo. Marque o critério como `parcial` e pergunte ao dev pelo `.jasper` recompilado. _Por quê:_ `RelatoriosUtil.loadJasperReport` carrega o `.jasper` quando ele existe e só compila o `.jrxml` se não houver `.jasper`; quase todo relatório tem os dois versionados. (revisão, 2026-10-28)
+- `.jrxml` com diff do arquivo inteiro ou de muitas linhas fora do que o card pede: compare com a versão da base (`git show <base>:<arquivo>`); pode ser cópia de outra branch que desfaz campo de outro card. _Por quê:_ no #980 o jrxml final foi copiado inteiro de uma branch antiga e desfez a cota formatada do card-975; em 10/07 um commit "merge" sobrescreveu 7 relatórios de registroExecucao no master com versões antigas. (#980, 2026-10-19)

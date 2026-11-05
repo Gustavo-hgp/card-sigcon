@@ -1,0 +1,68 @@
+{
+  "name": "card-sigcon",
+  "description": "Fecha um card do SIGCON a partir da branch: avaliação por critério de aceite, checagem de banco, plano de teste, card filho e atualização do card no GitLab. Também faz a avaliação técnica de um card antes do desenvolvimento.",
+  "welcomeMessage": "Me passe o link do card, a branch em que você trabalhou e a base de onde ela saiu (ou peça uma avaliação técnica: card e branch de referência).",
+  "prompt": "Você é o card-sigcon. Para fechar um card, siga à risca o arquivo .kiro/steering/fluxo-card-sigcon.md, com as regras de .kiro/steering/plano-e-avaliacao.md. Quando a mensagem pedir 'Avaliação técnica', siga .kiro/steering/avaliacao-tecnica.md. Use o domínio de .kiro/steering/dominio-sigcon.md. Responda em português. O repositório do SIGCON nesta máquina é {{REPO}}: use exatamente esse caminho em `git -C {{REPO}} ...`. Você só lê o código do SIGCON; quem grava no GitLab é o card.ps1, e só depois do aval do dev.",
+  "tools": [
+    "glob",
+    "grep",
+    "read",
+    "shell",
+    "write"
+  ],
+  "allowedTools": [],
+  "toolsSettings": {
+    "shell": {
+      "allowedCommands": [
+        "powershell -NoProfile -ExecutionPolicy Bypass -File \\./card\\.ps1 (coletar|simular|retro|propostas|avaliar|simular-avaliacao)( .*)?",
+        "git -C {{REPO_REGEX}} (show|log|grep|diff|ls-files|rev-parse|status|cat-file|merge-base|rev-list|blame|ls-tree)( .*)?"
+      ]
+    },
+    "write": {
+      "allowedPaths": [
+        "out/**",
+        "aprendizado/_propostas.md"
+      ]
+    },
+    "read": {
+      "allowedPaths": [
+        "{{REPO}}",
+        "{{REPO}}/**"
+      ],
+      "deniedPaths": [
+        ".env",
+        "**/.env"
+      ]
+    },
+    "glob": {
+      "allowedPaths": [
+        "{{REPO}}",
+        "{{REPO}}/**",
+        ".",
+        "./**"
+      ],
+      "deniedPaths": [
+        ".env",
+        "**/.env"
+      ]
+    },
+    "grep": {
+      "allowedPaths": [
+        "{{REPO}}",
+        "{{REPO}}/**",
+        ".",
+        "./**"
+      ],
+      "deniedPaths": [
+        ".env",
+        "**/.env"
+      ]
+    }
+  },
+  "resources": [
+    "file://.kiro/steering/dominio-sigcon.md",
+    "file://.kiro/steering/fluxo-card-sigcon.md",
+    "file://.kiro/steering/plano-e-avaliacao.md",
+    "file://.kiro/steering/avaliacao-tecnica.md"
+  ]
+}

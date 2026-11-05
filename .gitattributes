@@ -1,0 +1,3 @@
+# Os .ps1 sao UTF-8 com BOM e o PowerShell 5.1 depende disso: o git nao converte nada
+# (nem quebra de linha), o arquivo vai e volta byte a byte.
+* -text

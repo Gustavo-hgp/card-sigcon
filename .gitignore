@@ -1,0 +1,8 @@
+# de cada maquina: trabalho dos cards, token e copia da wiki
+out/
+.env
+wiki/
+# gerado ao abrir a pagina (ou card.cmd configurar) a partir de .kiro/agente-modelo.json,
+# com o caminho do repositorio do SIGCON desta maquina
+.kiro/agents/card-sigcon.json
+.kiro/agents/card-sigcon.carimbo

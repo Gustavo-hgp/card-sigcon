@@ -1,0 +1,114 @@
+{
+  "gitlabUrl": "https://git.prodemge.gov.br",
+  "projetoPadrao": "prodemge-doc/dsg/ssc/gsa/sigcon-saida/gestao-squads/squad-projetos/visao-segov/execucao-e-prestacao-de-contas",
+  "projetos": [
+    { "id": 2375, "nome": "Execução e PC", "path": "prodemge-doc/dsg/ssc/gsa/sigcon-saida/gestao-squads/squad-projetos/visao-segov/execucao-e-prestacao-de-contas" },
+    { "id": 4490, "nome": "Alteração de Instrumento", "path": "prodemge-doc/dsg/ssc/gsa/sigcon-saida/gestao-squads/squad-projetos/visao-segov/alteracao-instrumento-doc" }
+  ],
+  "repoPadrao": "../gggt",
+
+  "git": {
+    "excluirDoDiff": [":(exclude,glob)**/*.jasper"],
+    "basesSugeridas": ["master", "feature/registro-execucao/geral-merge", "feature/alteracao-instrumento/geral"],
+    "ignorarNaoCommitado": ["^\\.settings/", "\\.classpath$", "\\.project$", "^NUL$"],
+    "limiteCommitsAviso": 40,
+    "commitsContaminados": [
+      {
+        "sha": "fce77c7aaf",
+        "motivo": "E o merge do homologacao inteiro na feature/registro-execucao/geral-merge (2026-09-03); branch criada nesse periodo carrega ~5.7k commits fora do master."
+      }
+    ],
+    "encodingPorExtensao": { ".java": "windows-1252", ".properties": "iso-8859-1" },
+    "crlfObrigatorio": [".java", ".xhtml"]
+  },
+
+  "arquivosAviso": [
+    { "padrao": "(^|/)\\.settings/|(^|/)\\.classpath$|(^|/)\\.project$", "motivo": "arquivo do Eclipse, nunca deve ir no commit." },
+    { "padrao": "LoginSistemaBO\\.java$", "motivo": "costuma ser ajuste local (ADSEG comentado); confirme que a mudança é do card." }
+  ],
+
+  "classesCompartilhadas": [
+    { "padrao": "PropostaPlanoTrabalhoBean\\.java$|PropostaPlanoDeTrabalhoBO\\.java$|propostaPlanoTrabalho\\.xhtml$", "motivo": "tela/bean da proposta e de TODAS as alterações: a regressão inclui a celebração (sem alteração) e os outros tipos (AS, DO, TA, RC)." },
+    { "padrao": "AnaliseTecnicaAlteracaoBean\\.java$|TimelineAlteracaoComponent\\.java$|ComparadorConvenioUtil\\.java$|StatusInstrumentoJuridicoBO\\.java$", "motivo": "compartilhada pelos tipos de alteração: testar pelo menos AS e TA, além do tipo do card." },
+    { "padrao": "AssinaturaBO\\.java$|AssinaturaEletronicaBO\\.java$", "motivo": "assinatura de todos os documentos: assinar também um documento que não é do card." },
+    { "padrao": "RelatorioBO\\.java$", "motivo": "gera vários relatórios: abrir pelo menos um relatório que não é do card." },
+    { "padrao": "LoginBean\\.java$|componenteMenu\\w*\\.xhtml$", "motivo": "permissões/menu: testar com um perfil que deve ver e com outro que não deve ver." },
+    { "padrao": "WEB-INF/faces-config\\.xml$|WebContent/templates/", "motivo": "navegação/template global: abrir também telas vizinhas do mesmo menu." }
+  ],
+
+  "areas": [
+    { "nome": "visita-tecnica", "padroes": ["pages/Monitoramento/", "VisitaTecnica", "PlanejamentoRota", "Rota[A-Z]", "mapa-", "ConvenioMapa"] },
+    { "nome": "alteracao-instrumento", "padroes": ["PropostaPlanoTrabalho", "PropostaPlanoDeTrabalho", "pages/AlteracaoDeConvenio/", "AlteracaoConvenio", "AlteracaoDeConvenio", "TimelineAlteracao", "ComparadorConvenio", "AnaliseTecnicaAlteracao", "StatusInstrumentoJuridico", "Assinatura"] },
+    { "nome": "relatorios", "padroes": ["\\.jrxml$", "/relatorios", "RelatorioBO"] },
+    { "nome": "execucao-financeira", "padroes": ["Extrato", "ExecucaoFinanceira", "Siafi", "SIAFI", "Grp[A-Z]"] }
+  ],
+  "aprendizadoSempre": ["geral", "plano-teste", "banco"],
+  "limpeza": { "dias": 60, "aoAbrirPagina": true },
+  "avaliacao": {
+    "atividade": "Avaliação Técnica",
+    "colunaDestino": "2 - Pronto para Execução",
+    "referencias": ["master", "feature/registro-execucao/geral-merge", "feature/alteracao-instrumento/geral"],
+    "aprendizado": ["geral", "avaliacao-tecnica", "banco"],
+    "maxAnteriores": 25
+  },
+  "wiki": { "projeto": "prodemge-doc/dsg/ssc/gsa/sigcon-saida/gestao-squads/documentacao-sigcon", "horasValidade": 24, "maxPaginas": 8 },
+  "evidencias": { "tamanhoMaximoMb": 50, "extensoes": [".png", ".jpg", ".jpeg", ".gif", ".webp", ".mp4", ".webm", ".mov"] },
+  "limiteLinhasAprendizado": 150,
+
+  "banco": {
+    "arquivos": [
+      { "nome": "script-sql", "arquivo": "(?i)\\.(sql|ddl)$", "descricao": "script de banco no diff" },
+      { "nome": "entidade-nova", "arquivo": "/model/.+\\.java$", "somenteNovo": true, "descricao": "classe nova em model/ (entidade nova?)" },
+      { "nome": "mapeamento", "arquivo": "persistence\\.xml$|\\.hbm\\.xml$", "descricao": "configuração de mapeamento alterada" }
+    ],
+    "linhas": [
+      { "nome": "anotacao-jpa", "arquivo": "\\.java$", "regex": "@(Entity|Table|Column|JoinColumn|JoinColumns|JoinTable|SequenceGenerator|GeneratedValue|Enumerated|OneToMany|ManyToOne|OneToOne|ManyToMany|Formula|Where)\\b" },
+      { "nome": "sql-nativo", "arquivo": "\\.java$", "regex": "createNativeQuery|createSQLQuery|@NamedNativeQuery" },
+      { "nome": "dml-ddl", "regex": "(?i)\\b(insert\\s+into|merge\\s+into|delete\\s+from|alter\\s+table|create\\s+(or\\s+replace\\s+)?(table|sequence|index|view|trigger|procedure|function)|drop\\s+(table|sequence|index|view|column))\\b" },
+      { "nome": "update-sql", "regex": "(?i)\\bupdate\\s+[a-z_][a-z0-9_.]*\\s+set\\b" },
+      { "nome": "query-jasper", "arquivo": "\\.jrxml$", "regex": "queryString|(?i:\\bselect\\b)" },
+      { "nome": "valor-enum", "arquivo": "/enums/", "regex": "^\\s*[A-Z][A-Z0-9_]*\\s*\\(\\s*\\d+" },
+      { "nome": "permissao", "arquivo": "LoginBean\\.java$", "regex": "boolean\\s+isPermissao\\w*\\s*\\(" }
+    ],
+    "regexObjeto": "\\b(?:TB|TX|SQ|SEQ|VW|TR|PK|FK|IX)_[A-Z0-9_]{3,}\\b",
+    "regexNomeAnotacao": "@(?:Table|Column|JoinColumn|JoinTable|SequenceGenerator)\\s*\\([^)]*?\\b(?:name|sequenceName)\\s*=\\s*\"([A-Za-z0-9_$#]+)\"",
+    "regexValorEnum": "^\\s*([A-Z][A-Z0-9_]*)\\s*\\(\\s*\\d+",
+    "regexPermissao": "boolean\\s+(isPermissao\\w*)\\s*\\(",
+    "limiteIdentificadores": 60
+  },
+
+  "quadro": {
+    "colunas": [
+      "Banco de Ideias", "1 - Backlog do Produto", "0 - Backlog Priorizado SEGOV", "2.1 - Historias Escritas em Standby",
+      "2 - Historias Escritas", "1 - Preparacao", "Avaliacao Tecnica", "2 - Pronto para Execucao", "Backlog Sprint",
+      "4 - Em Execucao na Sprint", "Em Ajustes / Correcoes", "Processo Merge / Publicacao", "Validacao Interna",
+      "Homologacao - Correcoes e Melhorias", "PRONTO PARA HOMOLOGACAO", "6 - Homologado pela SEGOV",
+      "7 - Aguardando Dependencias", "EM PRODUCAO OU FINALIZADO", "Producao - Correcoes e Melhorias", "Freshdesk"
+    ],
+    "atividadePorColuna": {
+      "4 - Em Execucao na Sprint": "Desenvolvimento",
+      "Em Ajustes / Correcoes": "Desenvolvimento",
+      "Homologacao - Correcoes e Melhorias": "Retornos de Homologação"
+    },
+    "atividades": ["Análise de Requisitos", "Prototipação", "Documentação", "Avaliação Técnica", "Desenvolvimento", "Retornos de Homologação"],
+    "colunaDestinoMover": "Processo Merge / Publicacao",
+    "moverSomenteDe": ["4 - Em Execucao na Sprint", "Em Ajustes / Correcoes", "Homologacao - Correcoes e Melhorias"],
+    "etiquetaFeito": "feito",
+    "etiquetaBanco": "Mudanca em Banco de Dados",
+    "regexEtiquetaPontos": "^\\d+\\s*pts?\\b"
+  },
+
+  "textos": {
+    "tituloFilho": "#{tituloPai} – {atividade}",
+    "descricaoFilho": "Card filho referente ao {atividade} do card #{iid}.",
+    "marcadorPlano": "<!-- card-sigcon:plano -->",
+    "cabecalhoPlano": "## Plano de teste",
+    "criteriosCobertos": "Critérios de aceite cobertos pelo plano: {lista}.",
+    "observacaoDev": "Observação do dev: {texto}",
+    "tituloEvidencias": "**Evidências:**",
+    "marcadorBanco": "<!-- card-sigcon:banco -->",
+    "marcadorAvaliacao": "<!-- card-sigcon:avaliacao -->",
+    "cabecalhoBanco": "**Scripts de banco de dados deste card**",
+    "linhaAprendizado": "- {regra} _Por quê:_ {porque} ({card}, {data})"
+  }
+}

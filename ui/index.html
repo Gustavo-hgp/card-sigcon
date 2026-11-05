@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Squad Projetos: Kiro updater</title>
+<link rel="icon" type="image/png" href="/public/favicon.png">
+<link rel="stylesheet" href="/app.css">
+<script>window.CARD_SIGCON_TOKEN = '__TOKEN__';</script>
+</head>
+<body>
+<header class="topo">
+  <div class="marca">
+    <img class="logo" src="/public/logo-simbolo.png" alt="" aria-hidden="true">
+    <div class="marca-texto"><strong>Kiro updater</strong><span>Squad Projetos</span></div>
+  </div>
+  <div class="card-atual" id="card-atual" hidden>
+    <a id="topo-link" target="_blank" rel="noopener"><span class="selo-modo" id="topo-modo" hidden>Avaliação técnica</span><span class="iid" id="topo-iid"></span><span class="titulo" id="topo-titulo"></span></a>
+  </div>
+  <div class="topo-direita">
+    <span id="topo-creditos" class="creditos-card" hidden></span>
+    <span id="status" class="status">Conectando…</span>
+    <button type="button" id="btn-novo" class="botao primario">Novo card</button>
+  </div>
+</header>
+
+<div class="avisos-instalacao" id="avisos-instalacao" role="alert" hidden></div>
+
+<div class="app">
+  <aside class="lateral">
+    <section class="bloco" id="bloco-card" hidden>
+      <h2 class="rotulo">Card</h2>
+      <dl class="meta">
+        <dt>Branch</dt><dd><code id="resumo-branch"></code></dd>
+        <dt>Base</dt><dd><code id="resumo-base"></code></dd>
+      </dl>
+    </section>
+    <section class="bloco">
+      <h2 class="rotulo">Etapas</h2>
+      <ol id="etapas" class="etapas"></ol>
+    </section>
+    <section class="bloco bloco-creditos">
+      <h2 class="rotulo">Consumo do Kiro</h2>
+      <p class="dica" id="creditos-mes">…</p>
+    </section>
+    <section class="bloco bloco-wiki">
+      <h2 class="rotulo">Wiki</h2>
+      <p class="dica" id="wiki-status">…</p>
+      <div class="acoes-lateral">
+        <button type="button" class="botao discreto" id="btn-wiki" title="Baixa de novo a documentação do sistema para o agente consultar">Atualizar wiki</button>
+        <button type="button" class="botao" id="btn-avaliacao" title="Avaliação técnica de um card antes do desenvolvimento: impacto, riscos e estimativa">Avaliação técnica</button>
+      </div>
+    </section>
+  </aside>
+
+  <main class="principal">
+    <nav class="abas" role="tablist" id="abas">
+      <button role="tab" data-aba="conversa" class="ativa">Conversa</button>
+      <button role="tab" data-aba="commits">Commits</button>
+      <button role="tab" data-aba="criterios">Critérios</button>
+      <button role="tab" data-aba="avaliacao">Avaliação</button>
+      <button role="tab" data-aba="banco">Banco</button>
+      <button role="tab" data-aba="plano">Plano</button>
+      <button role="tab" data-aba="publicar">Publicar</button>
+      <button role="tab" data-aba="aprendizado">Aprendizado</button>
+    </nav>
+
+    <section class="painel painel-conversa" id="painel-conversa">
+      <div class="rolagem" id="rolagem-conversa">
+        <div class="leitura">
+          <div id="vazio" class="vazio">
+            <img class="vazio-logo" src="/public/Gemini_Generated_Image_cje82kcje82kcje8.jpg" alt="SIGCON Saída">
+            <p class="vazio-titulo">Nenhum card em andamento</p>
+            <p>Clique em <strong>Novo card</strong>, escolha a branch, o card e a base. O agente do Kiro coleta o contexto e vai perguntando aqui.</p>
+          </div>
+          <div id="conversa" class="conversa"></div>
+          <div id="trabalhando" class="msg agente trabalhando" hidden>
+            <div class="msg-cabecalho"><span class="autor">Kiro</span><span class="girando" aria-hidden="true"></span><span id="trabalhando-texto">trabalhando…</span>
+              <button type="button" id="btn-cancelar" class="botao discreto pequeno">Cancelar</button></div>
+            <div id="log-vivo"></div>
+          </div>
+        </div>
+      </div>
+      <form id="form-resposta" class="compositor" hidden>
+        <div class="leitura">
+          <div class="painel-perguntas" id="painel-perguntas" hidden></div>
+          <div class="atalhos" id="atalhos">
+            <button type="button" class="chip">Confirmo, os commits são do card.</button>
+            <button type="button" class="chip">Lista de critérios confirmada, pode avaliar.</button>
+            <button type="button" class="chip">Pode seguir até gravar a decisão.</button>
+          </div>
+          <div class="caixa">
+            <textarea name="texto" rows="1" placeholder="Responda ao agente…  (Ctrl+Enter envia)"></textarea>
+            <button type="submit" class="botao primario">Enviar</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section class="painel" id="painel-commits" hidden><div class="leitura md" id="md-commits"></div></section>
+    <section class="painel" id="painel-criterios" hidden><div class="leitura md" id="md-criterios"></div></section>
+    <section class="painel" id="painel-avaliacao" hidden><div class="leitura md" id="md-avaliacao"></div></section>
+    <section class="painel" id="painel-banco" hidden><div class="leitura md" id="md-banco"></div></section>
+    <section class="painel painel-plano" id="painel-plano" hidden>
+      <div class="barra-testes" id="barra-testes" hidden>
+        <div class="leitura barra-testes-conteudo">
+          <div class="progresso">
+            <strong id="progresso-testes">0 de 0 cenários feitos</strong>
+            <span class="dica">Marque o que você testou, anote o que viu e anexe prints ou vídeos. Fica salvo sozinho. A SEGOV lê o card: evite print com dado pessoal (CPF, conta, nome) sem necessidade.</span>
+          </div>
+          <button type="button" id="btn-enviar-testes" class="botao primario" disabled>Enviar resultados ao Kiro</button>
+        </div>
+      </div>
+      <div class="rolagem"><div class="leitura md" id="md-plano"></div></div>
+    </section>
+
+    <section class="painel" id="painel-publicar" hidden>
+      <div class="leitura publicar">
+        <form id="form-publicar" class="cartao">
+          <h3>Opções</h3>
+          <label class="campo-select">Mover o card para
+            <select name="coluna" id="sel-coluna">
+              <option value="">Não mover</option>
+            </select>
+          </label>
+          <p class="dica" id="dica-coluna"></p>
+          <label class="campo-select" id="campo-pontos" hidden>Pontos do card
+            <select name="pontos" id="sel-pontos">
+              <option value="">Os do agente (decisão)</option>
+            </select>
+          </label>
+          <p class="dica" id="dica-pontos" hidden></p>
+          <label class="campo-select" id="campo-atividade">Card filho
+            <select name="atividade">
+              <option value="">Automático, pela coluna atual</option>
+            </select>
+          </label>
+          <label class="check"><input type="checkbox" name="semFilho"> Não mexer em card filho</label>
+          <label class="check"><input type="checkbox" name="novoFilho"> Criar outro filho mesmo se já existir um fechado</label>
+          <div class="acoes">
+            <button type="button" id="btn-simular" class="botao">Simular</button>
+            <button type="button" id="btn-previa" class="botao" disabled title="Rode o Simular para gerar o comentário">Pré-visualizar comentário</button>
+            <button type="button" id="btn-publicar" class="botao perigo" disabled>Publicar no GitLab</button>
+          </div>
+          <p class="dica" id="motivo-publicar"></p>
+          <p class="dica">O <strong>Simular</strong> só lê o GitLab. O <strong>Publicar</strong> grava no card, no seu nome, com as mesmas opções do último Simular.</p>
+        </form>
+        <div class="cartao saida-cartao">
+          <h3>Saída</h3>
+          <pre id="saida-card" class="saida">Nada ainda.</pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="painel" id="painel-aprendizado" hidden>
+      <div class="leitura">
+        <div class="cartao">
+          <div class="cartao-topo">
+            <h3>Propostas de aprendizado</h3>
+            <label class="check" id="rotulo-todas" hidden><input type="checkbox" id="marcar-todas"> Marcar todas</label>
+          </div>
+          <p class="dica">O agente propõe regras em <code>aprendizado/_propostas.md</code>. Marque as que devem entrar nas regras do time (ou sair delas, nas de remover); as desmarcadas continuam pendentes.</p>
+          <div id="lista-propostas" class="propostas"><p class="dica">Carregando…</p></div>
+          <div class="acoes" id="acoes-propostas" hidden>
+            <button type="button" id="btn-gravar-propostas" class="botao primario" disabled>Gravar marcadas</button>
+            <button type="button" id="btn-descartar-propostas" class="botao" disabled>Descartar marcadas</button>
+            <span class="dica" id="resultado-propostas"></span>
+          </div>
+        </div>
+        <div class="cartao">
+          <div class="cartao-topo">
+            <h3>Revisão do aprendizado</h3>
+            <div class="acoes-revisao">
+              <button type="button" id="btn-cancelar-revisao" class="botao" hidden>Cancelar</button>
+              <button type="button" id="btn-revisao" class="botao">Pedir revisão ao Kiro</button>
+            </div>
+          </div>
+          <p class="dica">O Kiro lê as regras de <code>aprendizado/</code> e o código e propõe tirar as duplicadas, contraditórias ou obsoletas (com a regra nova no lugar, quando for o caso). Ele não muda as regras: as propostas aparecem acima para você marcar. Roda numa conversa à parte, sem mexer no card aberto.</p>
+          <p class="dica" id="status-revisao"></p>
+          <div id="resultado-revisao" class="mensagem-revisao" hidden></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<dialog id="dlg-card" class="dialogo" aria-labelledby="dlg-titulo">
+  <form id="form-iniciar" novalidate>
+    <header class="dialogo-topo">
+      <h2 id="dlg-titulo">Novo card</h2>
+      <button type="button" class="botao discreto fechar" id="btn-fechar-dlg" aria-label="Fechar">✕</button>
+    </header>
+    <div class="dialogo-corpo">
+      <div class="campo">
+        <label for="in-card"><span class="passo">1</span> Card</label>
+        <div class="combo">
+          <input id="in-card" autocomplete="off" spellcheck="false" placeholder="Clique para ver os seus cards, ou digite número, título ou link" role="combobox" aria-expanded="false" aria-controls="lista-cards">
+          <ul id="lista-cards" class="sugestoes" role="listbox" hidden></ul>
+        </div>
+        <div id="previa-card" class="previa" hidden></div>
+      </div>
+      <div class="campo">
+        <label for="in-branch"><span class="passo">2</span> <span id="rotulo-branch">Branch em que você trabalhou</span></label>
+        <div class="referencias" id="referencias" hidden></div>
+        <div class="combo">
+          <input id="in-branch" autocomplete="off" spellcheck="false" placeholder="Digite parte do nome: 1099, painel, extrato…" role="combobox" aria-expanded="false" aria-controls="lista-branches">
+          <ul id="lista-branches" class="sugestoes" role="listbox" hidden></ul>
+        </div>
+        <p class="dica" id="dica-branch"></p>
+      </div>
+      <div class="campo" id="campo-base">
+        <label><span class="passo">3</span> Base de onde a branch saiu</label>
+        <div id="bases" class="bases"><p class="dica">Escolha a branch para ver as bases.</p></div>
+        <label class="opcao-base outra">
+          <input type="radio" name="base" value="__outra">
+          <span class="opcao-texto"><strong>Outra branch ou commit</strong>
+            <input id="in-base-outra" autocomplete="off" spellcheck="false" placeholder="ex.: homologacao ou 783d95404e~1"></span>
+        </label>
+      </div>
+    </div>
+    <footer class="dialogo-rodape">
+      <span class="dica" id="dlg-aviso"></span>
+      <button type="button" class="botao" id="btn-dlg-cancelar">Cancelar</button>
+      <button type="submit" class="botao primario" id="btn-comecar" disabled>Começar</button>
+    </footer>
+  </form>
+</dialog>
+
+<dialog id="dlg-previa" class="dialogo dialogo-largo" aria-labelledby="previa-titulo">
+  <div class="dialogo-conteudo">
+    <header class="dialogo-topo">
+      <h2 id="previa-titulo">Pré-visualização do comentário</h2>
+      <button type="button" class="botao discreto fechar" id="btn-fechar-previa" aria-label="Fechar">✕</button>
+    </header>
+    <div class="dialogo-corpo">
+      <p class="previa-aviso" id="previa-aviso"></p>
+      <article class="nota-gitlab nota-editavel" id="previa-comentario" data-nome="comentario-plano">
+        <header class="nota-cabecalho">
+          <span class="avatar" aria-hidden="true">Vc</span>
+          <span><strong>Você</strong> <span class="nota-meta" id="previa-meta">comentaria agora</span></span>
+          <span class="nota-acoes">
+            <span class="selo-editado" hidden>editado por você</span>
+            <button type="button" class="botao discreto pequeno btn-descartar-edicao" hidden>Voltar ao texto gerado</button>
+            <button type="button" class="botao pequeno btn-editar">Editar</button>
+          </span>
+        </header>
+        <p class="aviso-edicao" hidden></p>
+        <div class="md gl-md" id="previa-corpo"></div>
+        <div class="nota-editor" hidden>
+          <textarea spellcheck="true" aria-label="Texto em markdown"></textarea>
+          <div class="nota-editor-acoes">
+            <span class="dica">Markdown, como no GitLab. O que você salvar é o que vai para o card.</span>
+            <button type="button" class="botao pequeno btn-cancelar-edicao">Cancelar</button>
+            <button type="button" class="botao primario pequeno btn-salvar-edicao">Salvar</button>
+          </div>
+        </div>
+      </article>
+      <article class="nota-gitlab nota-interna nota-editavel" id="previa-nota-banco" data-nome="nota-banco" hidden>
+        <header class="nota-cabecalho">
+          <span class="avatar" aria-hidden="true">Vc</span>
+          <span><strong>Você</strong> <span class="nota-meta">nota interna · só membros do projeto veem</span></span>
+          <span class="nota-acoes">
+            <span class="selo-editado" hidden>editado por você</span>
+            <button type="button" class="botao discreto pequeno btn-descartar-edicao" hidden>Voltar ao texto gerado</button>
+            <button type="button" class="botao pequeno btn-editar">Editar</button>
+          </span>
+        </header>
+        <p class="aviso-edicao" hidden></p>
+        <div class="md gl-md" id="previa-nota-corpo"></div>
+        <div class="nota-editor" hidden>
+          <textarea spellcheck="true" aria-label="Texto em markdown"></textarea>
+          <div class="nota-editor-acoes">
+            <span class="dica">Markdown, como no GitLab. O que você salvar é o que vai para o card.</span>
+            <button type="button" class="botao pequeno btn-cancelar-edicao">Cancelar</button>
+            <button type="button" class="botao primario pequeno btn-salvar-edicao">Salvar</button>
+          </div>
+        </div>
+      </article>
+    </div>
+    <footer class="dialogo-rodape">
+      <span class="dica" id="previa-copiado"></span>
+      <button type="button" class="botao" id="btn-previa-copiar">Copiar markdown</button>
+      <button type="button" class="botao primario" id="btn-previa-ok">Fechar</button>
+    </footer>
+  </div>
+</dialog>
+
+<div id="aviso" class="aviso" role="alert" hidden></div>
+<script src="/app.js"></script>
+</body>
+</html>
