@@ -74,6 +74,11 @@ function Comando-Coletar {
         $links = Invoke-Gitlab -Caminho "/projects/$projetoId/issues/$($ref.Iid)/links" -Todas
         Write-Host "Card #$($issue.iid): $($issue.title)"
     }
+    # avaliacao tecnica feita antes do desenvolvimento: nota interna no card filho
+    $avaliacoesFilho = @()
+    if ($issue) {
+        try { $avaliacoesFilho = Avaliacoes-DosFilhos $projetoId $links } catch { Avisar "não consegui ler a avaliação técnica do card filho ($($_.Exception.Message))." }
+    }
     $criterios = @()
     if ($issue) { $criterios = Extrair-Criterios $issue.description }
 
@@ -182,11 +187,16 @@ function Comando-Coletar {
         L ''
         foreach ($n in $notas) {
             $marca = ''; if ([string]$n.body -like ('*' + $cfg.textos.marcadorPlano + '*')) { $marca = ' (plano publicado pelo card-sigcon)' }
-            if ([string]$n.body -like ('*' + $cfg.textos.marcadorAvaliacao + '*')) { $marca = ' (avaliação técnica do card-sigcon, nota interna)' }
+            if ([string]$n.body -like ('*' + $cfg.textos.marcadorAvaliacao + '*')) { $marca = ' (avaliação técnica do card-sigcon)' }
             L "### $($n.author.name) - $($n.created_at)$marca"
             L ''
             L ([string]$n.body)
             L ''
+        }
+        if (@($avaliacoesFilho).Count) {
+            L '## Avaliacao tecnica (nota interna no card filho, feita antes do desenvolvimento)'
+            L ''
+            foreach ($a in @($avaliacoesFilho)) { L "### Filho #$($a.Iid) - $($a.Autor) - $($a.Data)"; L ''; L $a.Texto; L '' }
         }
         L '## Cards ligados'
         L ''

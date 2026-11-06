@@ -46,13 +46,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./card.ps1 <comando> ...
    - `out/<pasta>/avaliacao-tecnica.md` no formato abaixo;
    - `out/<pasta>/decisao-avaliacao.json`: `{"pontos": 3, "justificativa": "...", "confirmadoPeloDev": true}`. `confirmadoPeloDev` só é `true` depois que o dev aprovou ou escolheu o valor; use o valor que ele escolheu.
 
-8. **Pare.** Diga que os arquivos estão prontos e que o dev usa **Simular** e **Publicar** na página. O Publicar grava a avaliação como **nota interna**, põe a etiqueta de pontos aprovada, conclui o card filho "Avaliação Técnica" e move o card (padrão: "2 - Pronto para Execução"). Não rode `publicar-avaliacao`.
+8. **Pare.** Diga que os arquivos estão prontos e que o dev usa **Simular** e **Publicar** na página. O Publicar põe a etiqueta de pontos aprovada no card, conclui o card filho "Avaliação Técnica" com a avaliação como **nota interna nele** e move o card (padrão: "2 - Pronto para Execução"). Não rode `publicar-avaliacao`.
 
 Se o dev corrigir algo relevante (impacto que você não viu, estimativa muito fora), proponha aprendizado na área `avaliacao-tecnica`, como no fluxo normal (etapa 11 de `fluxo-card-sigcon.md`).
 
 ## Formato do `avaliacao-tecnica.md`
 
-É uma **nota interna** (só a equipe vê): pode ter nome de classe, arquivo e tabela. Português correto, com acentos. Sem assinatura, rodapé ou menção à ferramenta ou a IA.
+Vai como **nota interna no card filho "Avaliação Técnica"** (só a equipe vê): pode ter nome de classe, arquivo e tabela. Português correto, com acentos. Sem assinatura, rodapé ou menção à ferramenta ou a IA.
 
 ```
 ## Avaliação técnica

@@ -1,8 +1,8 @@
 ﻿# card-sigcon - avaliacao tecnica de um card, antes do desenvolvimento.
 # Nao ha branch do card nem diff: o agente le a HU, a wiki e o codigo de uma branch de
 # referencia (escolhida pelo dev) e escreve a avaliacao (impacto, riscos, estimativa). O
-# script coleta e, no publicar, grava a avaliacao como nota interna, poe a etiqueta de
-# pontos aprovada, conclui o card filho "Avaliação Técnica" (regra da DSG) e move o card.
+# script coleta e, no publicar, poe a etiqueta de pontos aprovada, conclui o card filho
+# "Avaliação Técnica" (regra da DSG) com a avaliacao como nota interna nele e move o card.
 # Pasta: out/<projeto>-<n>-avaliacao/ (separada da do desenvolvimento do mesmo card).
 # Salvo em UTF-8 com BOM (ver lib/Comum.ps1).
 
@@ -69,6 +69,8 @@ function Comando-ColetarAvaliacao {
     $notas = Notas-Humanas (Invoke-Gitlab -Caminho "/projects/$projetoId/issues/$($cardRef.Iid)/notes?sort=asc&order_by=created_at&per_page=100" -Todas)
     $links = Invoke-Gitlab -Caminho "/projects/$projetoId/issues/$($cardRef.Iid)/links" -Todas
     Write-Host "Card #$($issue.iid): $($issue.title)"
+    $avaliacoesFilho = @()
+    try { $avaliacoesFilho = Avaliacoes-DosFilhos $projetoId $links } catch { Avisar "não consegui ler a avaliação anterior do card filho ($($_.Exception.Message))." }
     $criterios = Extrair-Criterios $issue.description
     $escala = Etiquetas-DePontos (Listar-Etiquetas $projetoId)
     $anteriores = @()
@@ -117,6 +119,11 @@ function Comando-ColetarAvaliacao {
     L "## Comentarios do card ($($notas.Count), mais antigos primeiro)"
     L ''
     foreach ($n in $notas) { L "### $($n.author.name) - $($n.created_at)"; L ''; L ([string]$n.body); L '' }
+    if (@($avaliacoesFilho).Count) {
+        L '## Avaliacao tecnica ja publicada (nota interna no card filho): parta dela e diga o que mudou'
+        L ''
+        foreach ($a in @($avaliacoesFilho)) { L "### Filho #$($a.Iid) - $($a.Autor) - $($a.Data)"; L ''; L $a.Texto; L '' }
+    }
     L '## Cards ligados'
     L ''
     if (@($links).Count -eq 0) { L '- nenhum' } else {
@@ -204,17 +211,7 @@ function Comando-PublicarAvaliacao {
     Write-Host "Coluna: $(Coluna-Atual $issue) | Pontos hoje: $(Etiqueta-Pontos $issue) | Você: $($eu.username)"
     $acoes = New-Object System.Collections.ArrayList
 
-    # 1. avaliacao como nota interna (atualiza a anterior do proprio dev)
-    $corpo = $cfg.textos.marcadorAvaliacao + "`n" + $texto
-    $corpoFinal = Texto-ParaPublicar $dirOut 'nota-avaliacao' $corpo ([bool]$Executar)
-    $anterior = @($notas | Where-Object { -not $_.system -and $_.author.id -eq $eu.id -and ([string]$_.body).Contains($cfg.textos.marcadorAvaliacao) } | Select-Object -Last 1)
-    if ($anterior.Count -gt 0) {
-        [void]$acoes.Add([pscustomobject]@{ Tipo = 'comentario-atualizar'; Descricao = "Atualizar a nota interna da avaliação técnica (nota $($anterior[0].id))"; NotaId = $anterior[0].id; Corpo = $corpoFinal })
-    } else {
-        [void]$acoes.Add([pscustomobject]@{ Tipo = 'nota-interna'; Descricao = 'Comentar a avaliação técnica como nota interna'; Corpo = $corpoFinal })
-    }
-
-    # 2. etiqueta de pontos aprovada (troca a anterior)
+    # 1. etiqueta de pontos aprovada (troca a anterior)
     $escala = Etiquetas-DePontos $etiquetas
     $alvo = @($escala | Where-Object { $_.Pontos -eq $Pontos }) | Select-Object -First 1
     if (-not $alvo) { throw "Não há etiqueta de $Pontos ponto(s) no projeto. Escala: $(@($escala | ForEach-Object { $_.Nome }) -join ', ')." }
@@ -226,12 +223,48 @@ function Comando-PublicarAvaliacao {
         Write-Host "O card já tem a etiqueta '$($alvo.Nome)'."
     }
 
-    # 3. card filho "Avaliação Técnica" com os pontos aprovados
-    if (-not $SemFilho) {
-        foreach ($a in (Acoes-Filho $issue $links $eu $etiquetas ([string]$cfg.avaliacao.atividade) ([bool]$NovoFilho) $alvo.Nome)) { [void]$acoes.Add($a) }
+    # 2. card filho "Avaliação Técnica" com os pontos aprovados, e a avaliacao como nota interna
+    # NO FILHO (so neste fluxo; o fechamento comenta no pai). Filho novo: a nota sai junto com a
+    # criacao. Filho existente: o aberto que sera concluido, ou o mais recente. Sem filho nenhum
+    # (Nao mexer em card filho e nenhum existente): a nota vai no pai.
+    $corpo = $cfg.textos.marcadorAvaliacao + "`n" + $texto
+    $corpoFinal = Texto-ParaPublicar $dirOut 'nota-avaliacao' $corpo ([bool]$Executar)
+    $atividade = [string]$cfg.avaliacao.atividade
+    $acoesFilho = @()
+    if (-not $SemFilho) { $acoesFilho = Acoes-Filho $issue $links $eu $etiquetas $atividade ([bool]$NovoFilho) $alvo.Nome }
+    $criar = @($acoesFilho | Where-Object { $_.Tipo -eq 'filho-criar' }) | Select-Object -First 1
+    $antigasPai = Minhas-Avaliacoes $notas $eu
+    $obsPai = ''; if (@($antigasPai).Count) { $obsPai = " (a avaliação anterior no card pai, nota $(@($antigasPai)[-1].id), fica como está)" }
+    $acaoNota = $null
+    if ($criar) {
+        $criar | Add-Member -NotePropertyName NotaInterna -NotePropertyValue $corpoFinal -Force
+        $criar.Descricao = $criar.Descricao + ', com a avaliação técnica como nota interna nele' + $obsPai
+    } else {
+        $filhos = Filhos-DaAtividade $links $atividade
+        $abertos = @(@($filhos) | Where-Object { $_.state -eq 'opened' })
+        $filho = $null
+        if ($abertos.Count) { $filho = $abertos | Sort-Object { [int]$_.iid } | Select-Object -Last 1 }
+        elseif (@($filhos).Count) { $filho = @($filhos) | Sort-Object { [int]$_.iid } | Select-Object -Last 1 }
+        $ondeIid = $iid; $onde = 'no card pai'; $obs = ''; $anteriores = $antigasPai
+        if ($filho) {
+            $ondeIid = [int]$filho.iid; $onde = "no filho #$($filho.iid)"; $obs = $obsPai
+            $anteriores = Minhas-Avaliacoes (Invoke-Gitlab -Caminho "/projects/$projetoId/issues/$ondeIid/notes?sort=asc&order_by=created_at&per_page=100" -Todas) $eu
+        } else {
+            Avisar 'não há card filho da avaliação (e "Não mexer em card filho" está marcado): a nota interna vai no card pai.'
+        }
+        # nota interna nao vira comentario (nem o contrario) pela API: so atualiza a anterior interna
+        $anterior = @(@($anteriores) | Where-Object { $_.internal -eq $true } | Select-Object -Last 1)
+        if ($anterior.Count) {
+            $acaoNota = [pscustomobject]@{ Tipo = 'comentario-atualizar'; IssueIid = $ondeIid; NotaId = $anterior[0].id; Corpo = $corpoFinal; Descricao = "Atualizar a nota interna da avaliação técnica $onde (nota $($anterior[0].id))" }
+        } else {
+            $acaoNota = [pscustomobject]@{ Tipo = 'nota-interna'; IssueIid = $ondeIid; Corpo = $corpoFinal; Descricao = "Gravar a avaliação técnica como nota interna $onde$obs" }
+        }
     }
+    # a nota entra antes de concluir (fechar) o filho
+    if ($acaoNota) { [void]$acoes.Add($acaoNota) }
+    foreach ($a in @($acoesFilho)) { [void]$acoes.Add($a) }
 
-    # 4. coluna
+    # 3. coluna
     if ($Coluna) {
         $acaoColuna = Acao-MoverColuna $projetoId $issue $Coluna
         if ($acaoColuna) { [void]$acoes.Add($acaoColuna) }

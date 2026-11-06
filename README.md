@@ -192,12 +192,12 @@ Para os cards da coluna "Avaliação Técnica": o agente estima impacto, riscos 
    - **Riscos e dependências:** classes compartilhadas, cards ligados, conflito com a wiki.
    - **Estimativa:** o agente sugere os pontos na escala do quadro, comparando com as avaliações técnicas anteriores do projeto. Você aprova ou escolhe outro valor.
 4. **Publicar.** Na aba Publicar, **Pontos do card** vem com o valor aprovado (dá para trocar), e **Mover o card para** vem com "2 - Pronto para Execução" (`avaliacao.colunaDestino`). O Simular mostra as ações; o Publicar:
-   - grava a avaliação como **nota interna** (só a equipe vê; publicar de novo atualiza a mesma nota);
    - troca a etiqueta de pontos do card pela aprovada;
    - conclui o card filho "Avaliação Técnica" pela regra da DSG, já com os pontos aprovados;
+   - grava a avaliação como **nota interna no card filho** (só a equipe vê). Filho novo: a nota sai junto com a criação, antes de fechar. Filho já existente: vai no aberto que está sendo concluído, ou no mais recente. Publicar de novo atualiza a mesma nota. Com "Não mexer em card filho" e nenhum filho existente, vai no card pai. Avaliação antiga no card pai fica como está (o Simular avisa);
    - move o card de coluna;
    - guarda a avaliação em `historico/<projeto>-<n>-avaliacao.md`.
-5. **Depois.** Quando o card for desenvolvido e fechado pelo fluxo normal, o coletar traz a nota da avaliação nos comentários, e o agente aponta o que saiu diferente do previsto (vira aprendizado na área `avaliacao-tecnica`).
+5. **Depois.** Quando o card for desenvolvido e fechado pelo fluxo normal, o coletar traz a nota da avaliação do card filho, e o agente aponta o que saiu diferente do previsto (vira aprendizado na área `avaliacao-tecnica`).
 
 As etapas da barra lateral mudam neste modo: Card e referência, Escopo, Impacto e riscos, Estimativa, Simular, Publicar. As abas Commits, Banco e Plano somem, e o topo mostra o selo "Avaliação técnica". Os arquivos ficam em `out/<projeto>-<n>-avaliacao/`, separados do desenvolvimento do mesmo card.
 
@@ -230,7 +230,7 @@ A regra de negócio documentada do SIGCON fica na wiki do projeto `documentacao-
 | `card.cmd wiki [-Forcar]` | Baixa a wiki do sistema para `wiki/` se a cópia tiver mais de 24 horas; com `-Forcar`, baixa na hora. |
 | `card.cmd avaliar -Card <link> -Ref <branch>` | Avaliação técnica: gera `out/<projeto>-<n>-avaliacao/contexto.md` com HU, comentários, wiki, escala de pontos e avaliações anteriores do projeto. |
 | `card.cmd simular-avaliacao -Card <link>` | Mostra o que o `publicar-avaliacao` faria. Opções: `-Pontos <n>`, `-Coluna "<nome>"`, `-SemFilho`, `-NovoFilho`. |
-| `card.cmd publicar-avaliacao -Card <link>` | Grava a avaliação como nota interna, troca a etiqueta de pontos, conclui o filho "Avaliação Técnica" e move o card. Mesmas opções. |
+| `card.cmd publicar-avaliacao -Card <link>` | Troca a etiqueta de pontos, conclui o filho "Avaliação Técnica" com a avaliação como nota interna nele e move o card. Mesmas opções. |
 
 `<link>` aceita a URL do card, `#1237` ou `1237` (projeto padrão: Execução e Prestação de Contas).
 

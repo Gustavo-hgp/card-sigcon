@@ -647,7 +647,7 @@ async function renderAbaArquivo() {
     } else if (abaAtual === 'avaliacao' && emAvaliacao()) {
       const t = await carregarArquivo('avaliacao-tecnica.md');
       $('#md-avaliacao').innerHTML = t
-        ? '<p class="nota-topo">Vai como nota interna no card (só a equipe vê).</p>' + md(t)
+        ? '<p class="nota-topo">Vai como nota interna no card filho "Avaliação Técnica" (só a equipe vê).</p>' + md(t)
         : vazio('O agente grava a avaliação técnica depois que você confirma o escopo e aprova os pontos.');
     } else if (abaAtual === 'avaliacao') {
       const t = await carregarArquivo('avaliacao.md');
@@ -1473,8 +1473,10 @@ $('#btn-simular').addEventListener('click', async () => {
 
 $('#btn-publicar').addEventListener('click', async () => {
   const o = opcoesPublicar();
-  const partes = ['comentar o plano de teste no card #' + estado.iid];
-  if (!o.semFilho) partes.push('criar ou concluir o card filho');
+  const partes = emAvaliacao()
+    ? ['pôr a etiqueta de pontos no card #' + estado.iid, o.semFilho ? 'gravar a avaliação como nota interna no card filho existente (ou no pai, se não houver filho)' : 'criar ou concluir o card filho "Avaliação Técnica" com a avaliação como nota interna nele']
+    : ['comentar o plano de teste no card #' + estado.iid];
+  if (!o.semFilho && !emAvaliacao()) partes.push('criar ou concluir o card filho');
   if (o.coluna) partes.push('mover o card para "' + o.coluna + '"');
   if (!confirm('Isto grava no GitLab, no seu nome: ' + partes.join(', ') + '.\n\nConfira a saída do Simular antes. Publicar agora?')) return;
   try {
@@ -1551,7 +1553,7 @@ $('#dlg-previa').addEventListener('click', async (ev) => {
   } catch (e) { avisar(e.message); }
 });
 
-// Avaliacao tecnica: so a nota interna, sem comentario publico.
+// Avaliacao tecnica: so a nota interna, gravada no card filho "Avaliação Técnica".
 async function abrirPreviaAvaliacao() {
   const a = estado.arquivos || {};
   if (!a['nota-avaliacao.md']) { avisar('Rode o Simular para gerar a nota interna.'); return; }
@@ -1564,7 +1566,7 @@ async function abrirPreviaAvaliacao() {
   aviso.className = 'previa-aviso' + (mudou ? ' desatualizada' : '');
   aviso.textContent = mudou
     ? 'A avaliação ou a decisão mudaram depois do último Simular. Esta é a versão antiga: rode o Simular de novo para ver a atual.'
-    : 'Este é o texto exato que o Publicar vai gravar como nota interna no card #' + estado.iid + ', gerado no último Simular.';
+    : 'Este é o texto exato que o Publicar vai gravar como nota interna no card filho "Avaliação Técnica" do #' + estado.iid + ', gerado no último Simular.';
   $('#previa-copiado').textContent = '';
   $('#dlg-previa').showModal();
   $('#dlg-previa .dialogo-corpo').scrollTop = 0;

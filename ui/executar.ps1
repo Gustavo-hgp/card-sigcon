@@ -20,9 +20,20 @@ try { [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false) } 
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 Set-Location -LiteralPath $e.raiz
 
+# Grava no log com novas tentativas: a pagina (ou o antivirus) pode estar com o arquivo aberto
+# naquele instante. Se continuar preso, a linha fica pendente e vai junto com a proxima; um erro
+# aqui nao pode interromper o turno (o Kiro ficaria rodando sem ninguem ler a saida).
+$script:Pendente = ''
+function Descarregar {
+    for ($i = 0; $i -lt 30 -and $script:Pendente; $i++) {
+        try { [System.IO.File]::AppendAllText($e.log, $script:Pendente, $utf8); $script:Pendente = '' }
+        catch { Start-Sleep -Milliseconds 100 }
+    }
+}
 function Linha([string]$Texto) {
     if ($Texto -match 'System\.Management\.Automation\.RemoteException') { return }
-    [System.IO.File]::AppendAllText($e.log, $Texto + "`n", $utf8)
+    $script:Pendente += $Texto + "`n"
+    Descarregar
 }
 
 # Aspas de argumento no Windows (regras do runtime C): o PowerShell 5.1 nao escapa
@@ -157,5 +168,6 @@ try {
     Linha "ERRO: $($_.Exception.Message)"
     $codigo = 1
 }
+Descarregar
 $fim = @{ codigo = $codigo; fim = (Get-Date).ToString('s'); sessaoId = $sessao; creditos = $creditos }
 [System.IO.File]::WriteAllText($e.fim, (ConvertTo-Json -InputObject $fim -Compress), $utf8)

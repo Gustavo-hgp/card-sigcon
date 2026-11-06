@@ -399,15 +399,18 @@ function Comando-Publicar {
 }
 
 function Executar-Acao($Acao, [int]$ProjetoId, [int]$Iid) {
+    # comentario/nota em outro card (ex.: a avaliacao tecnica vai no filho): IssueIid na acao
+    $alvoIid = $Iid
+    if ($Acao.PSObject.Properties['IssueIid'] -and $Acao.IssueIid) { $alvoIid = [int]$Acao.IssueIid }
     switch ($Acao.Tipo) {
         'comentario-novo' {
-            [void](Invoke-Gitlab -Metodo POST -Caminho "/projects/$ProjetoId/issues/$Iid/notes" -Corpo @{ body = $Acao.Corpo })
+            [void](Invoke-Gitlab -Metodo POST -Caminho "/projects/$ProjetoId/issues/$alvoIid/notes" -Corpo @{ body = $Acao.Corpo })
         }
         'comentario-atualizar' {
-            [void](Invoke-Gitlab -Metodo PUT -Caminho "/projects/$ProjetoId/issues/$Iid/notes/$($Acao.NotaId)" -Corpo @{ body = $Acao.Corpo })
+            [void](Invoke-Gitlab -Metodo PUT -Caminho "/projects/$ProjetoId/issues/$alvoIid/notes/$($Acao.NotaId)" -Corpo @{ body = $Acao.Corpo })
         }
         'nota-interna' {
-            [void](Invoke-Gitlab -Metodo POST -Caminho "/projects/$ProjetoId/issues/$Iid/notes" -Corpo @{ body = $Acao.Corpo; internal = $true })
+            [void](Invoke-Gitlab -Metodo POST -Caminho "/projects/$ProjetoId/issues/$alvoIid/notes" -Corpo @{ body = $Acao.Corpo; internal = $true })
         }
         'evidencias-enviar' {
             $cache = Ler-CacheEvidencias $Acao.DirOut
@@ -432,6 +435,10 @@ function Executar-Acao($Acao, [int]$ProjetoId, [int]$Iid) {
             $novo = Invoke-Gitlab -Metodo POST -Caminho "/projects/$ProjetoId/issues" -Corpo $corpo
             Write-Host "   criado #$($novo.iid)"
             [void](Invoke-Gitlab -Metodo POST -Caminho "/projects/$ProjetoId/issues/$($novo.iid)/links" -Corpo @{ target_project_id = $ProjetoId; target_issue_iid = $Iid; link_type = 'relates_to' })
+            # avaliacao tecnica: nota interna no filho, antes de fechar
+            if ($Acao.PSObject.Properties['NotaInterna'] -and $Acao.NotaInterna) {
+                [void](Invoke-Gitlab -Metodo POST -Caminho "/projects/$ProjetoId/issues/$($novo.iid)/notes" -Corpo @{ body = $Acao.NotaInterna; internal = $true })
+            }
             [void](Invoke-Gitlab -Metodo PUT -Caminho "/projects/$ProjetoId/issues/$($novo.iid)" -Corpo @{ state_event = 'close' })
         }
         'filho-concluir' {

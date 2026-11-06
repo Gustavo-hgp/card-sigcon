@@ -16,7 +16,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./card.ps1 <comando> ...
 
 **Avaliação técnica:** se a primeira mensagem diz "Avaliação técnica", o card ainda não foi desenvolvido. Siga `avaliacao-tecnica.md` em vez deste fluxo.
 
-**Card que já teve avaliação técnica:** a avaliação aparece nos comentários do contexto como nota interna (marcada "avaliação técnica do card-sigcon"). Use-a como ponto de partida e, na avaliação por critério, aponte o que saiu diferente do previsto (telas a mais, banco que não estava previsto). Isso vira aprendizado na área `avaliacao-tecnica`.
+**Card que já teve avaliação técnica:** a avaliação aparece no contexto, na seção "Avaliacao tecnica" (nota interna do card filho "Avaliação Técnica") ou, nas antigas, nos comentários do card (marcada "avaliação técnica do card-sigcon"). Use-a como ponto de partida e, na avaliação por critério, aponte o que saiu diferente do previsto (telas a mais, banco que não estava previsto). Isso vira aprendizado na área `avaliacao-tecnica`.
 
 ## Quando a conversa vem da página
 

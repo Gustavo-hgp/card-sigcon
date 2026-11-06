@@ -89,6 +89,30 @@ function Filhos-DaAtividade($Links, [string]$Atividade) {
     return ,@($Links | Where-Object { (Normalizar-Texto $_.title).EndsWith($alvo) })
 }
 
+# Notas da avaliacao tecnica (marcador do card-sigcon) gravadas por $Eu.
+function Minhas-Avaliacoes($Notas, $Eu) {
+    $m = [string]$script:Cfg.textos.marcadorAvaliacao
+    return ,@(@($Notas) | Where-Object { $_ -and -not $_.system -and $_.author.id -eq $Eu.id -and ([string]$_.body).Contains($m) })
+}
+
+# Avaliacao tecnica publicada pelo card-sigcon: fica como nota interna no card filho
+# "... - Avaliação Técnica" (antes de 05/11/2026, nos comentarios do proprio card, que o
+# coletar ja le). Devolve [{ Iid, Autor, Data, Texto }] dos filhos.
+function Avaliacoes-DosFilhos([int]$ProjetoId, $Links) {
+    $m = [string]$script:Cfg.textos.marcadorAvaliacao
+    $lista = @()
+    $filhos = Filhos-DaAtividade $Links ([string]$script:Cfg.avaliacao.atividade)
+    foreach ($f in @($filhos)) {
+        $notas = Invoke-Gitlab -Caminho "/projects/$ProjetoId/issues/$($f.iid)/notes?sort=asc&order_by=created_at&per_page=100" -Todas
+        foreach ($n in @($notas)) {
+            if ($n -and -not $n.system -and ([string]$n.body).Contains($m)) {
+                $lista += [pscustomobject]@{ Iid = $f.iid; Autor = $n.author.name; Data = $n.created_at; Texto = [string]$n.body }
+            }
+        }
+    }
+    return ,$lista
+}
+
 function Filhos-Conhecidos($Links) {
     $lista = @()
     foreach ($l in @($Links)) {

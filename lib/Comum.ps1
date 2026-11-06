@@ -6,8 +6,13 @@ $script:Utf8SemBom = New-Object System.Text.UTF8Encoding($false)
 $script:Utf8Estrito = New-Object System.Text.UTF8Encoding($false, $true)
 $script:Latin1 = [System.Text.Encoding]::GetEncoding(28591)
 
+# Leitura compartilhada: a pagina le o log do turno enquanto o executar.ps1 ainda grava nele.
+# ReadAllText abre so com FileShare.Read e, nesse instante, a gravacao do outro processo falha
+# ("o arquivo esta sendo usado por outro processo").
 function Ler-Texto([string]$Caminho) {
-    return [System.IO.File]::ReadAllText($Caminho, [System.Text.Encoding]::UTF8)
+    $fs = New-Object System.IO.FileStream($Caminho, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]'ReadWrite, Delete')
+    try { return (New-Object System.IO.StreamReader($fs, [System.Text.Encoding]::UTF8, $true)).ReadToEnd() }
+    finally { $fs.Dispose() }
 }
 
 function Gravar-Texto([string]$Caminho, [string]$Texto) {
